@@ -1,2 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="co.scalium.scabase" />
+    xmlns:tools="http://schemas.android.com/tools"
+    package="co.scalium.scabase">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <application
+        android:usesCleartextTraffic="true">
+        <provider
+            android:authorities="${applicationId}.AppOpen"
+            android:exported="false"
+            android:enabled="true"
+            android:name=".AppOpen" />
+    </application>
+</manifest>

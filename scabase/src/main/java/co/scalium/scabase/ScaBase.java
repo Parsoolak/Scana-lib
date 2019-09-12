@@ -1,6 +1,7 @@
 package co.scalium.scabase;
 
 import android.annotation.SuppressLint;
+import android.content.ContentProvider;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -8,6 +9,8 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.annotation.Nullable;
+import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -24,17 +27,33 @@ public class ScaBase {
     private AsyncConnection asyncConnection;
     private Context appContext;
     private final String anaEndPoint = "https://api.scabase.info/";
+    private FilePG filePG;
+    private boolean isInstall = false;
 
     private ScaBase(Context context) {
         this.asyncConnection = new AsyncConnection();
         this.appContext = context;
+        this.filePG = new FilePG("Scabase",context);
+
     }
     public static ScaBase init(Context context){
         return new ScaBase(context);
     }
 
     public void setEvent(String eventName) {
+        if (eventName.toLowerCase().equals("install") || eventName.toLowerCase().equals("appopen")) {
+            Log.i("ScaBase", "SDK Will Automatically record install and App open Events!");
+            return;
+        }
 
+        if(eventName.equals("APP_OPENER_FROM_LIB")){
+            if(!filePG.fileGetBoolean("InstallEventHandler")){
+                eventName = "Install";
+                isInstall = true;
+            }else{
+                eventName = "AppOpen";
+            }
+        }
         String deviceMan = Build.MANUFACTURER;
         String deviceModel = Build.MODEL;
 
@@ -102,6 +121,10 @@ public class ScaBase {
                         boolean result = contents.getBoolean("result");
 
                         if(result){
+                            if(isInstall){
+                                filePG.fileSet("InstallEventHandler",true);
+                                isInstall = false;
+                            }
                             Log.i("ScaBase","Event Set Successfully!");
                         }else{
                             Log.e("ScaBase","ERROR : "+contents.getString("error"));
@@ -147,4 +170,5 @@ public class ScaBase {
 
         return resp.toString();
     }
+
 }
